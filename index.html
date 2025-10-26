@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Karaoke - The Way You Make Me Feel (Player Estilizado)</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --dorado: #ffd700;
+    --dorado-oscuro: #d4af37;
+    --fondo-oscuro: rgba(0,0,0,0.5);
+    --transp: rgba(255,255,255,0.06);
+    --gris: #bdbdbd;
+    --glass: rgba(255,255,255,0.06);
+  }
+
+  *{box-sizing: border-box; font-family: "Poppins", sans-serif; -webkit-font-smoothing:antialiased}
+  html,body{height:100%; margin:0; background:#000; color:#fff}
+
+  /* Contenedor fullscreen con fondo */
+  #karaoke{
+    position:relative;
+    width:100%;
+    height:100vh;
+    background: url('fondo_MJ_show.jpg') center/cover no-repeat;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+
+  /* Overlay oscuro */
+  #overlay{
+    position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.72));
+    backdrop-filter: blur(4px);
+  }
+
+  /* Card central */
+  .card{
+    position:relative;
+    z-index:2;
+    width:min(1100px, 96%);
+    background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.25));
+    border-radius:18px;
+    padding:26px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+    display:grid;
+    grid-template-columns: 1fr 420px;
+    gap:20px;
+    align-items:center;
+  }
+
+  /* Panel de letras */
+  .panel-letras{
+    padding: 14px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    align-items:center;
+    justify-content:center;
+    min-height:220px;
+  }
+
+  .linea{
+    width:100%;
+    max-width:920px;
+    padding:12px 28px;
+    border-radius:14px;
+    text-align:center;
+    backdrop-filter: blur(6px);
+  }
+  .anterior{ color:var(--gris); font-size:18px; opacity:0.7; background: rgba(0,0,0,0.18); }
+  .actual{
+    color:var(--dorado);
+    font-weight:800;
+    font-size:28px;
+    letter-spacing:0.6px;
+    background: linear-gradient(90deg, rgba(0,0,0,0.28), rgba(255,255,255,0.02));
+    box-shadow: 0 6px 20px rgba(212,175,55,0.08), 0 0 18px rgba(255,215,0,0.06) inset;
+    position:relative;
+    overflow:visible;
+  }
+  .actual::after{
+    /* glow pulsing */
+    content:'';
+    position:absolute;
+    left:-6px; right:-6px; top:-6px; bottom:-6px;
+    border-radius:18px;
+    pointer-events:none;
+    box-shadow: 0 0 24px rgba(255,215,0,0.08);
+    animation: pulse 2.2s infinite ease-in-out;
+  }
+  @keyframes pulse{
+    0% { box-shadow: 0 0 0 rgba(255,215,0,0.06); transform:scale(1); }
+    50%{ box-shadow: 0 0 30px rgba(255,215,0,0.22); transform:scale(1.003);}
+    100%{ box-shadow: 0 0 0 rgba(255,215,0,0.06); transform:scale(1); }
+  }
+  .siguiente{ color:var(--gris); font-size:18px; opacity:0.65; background: rgba(0,0,0,0.18); }
+
+  /* Panel de controles - estilo moderno */
+  .panel-ctrl{
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    align-items:stretch;
+    justify-content:center;
+  }
+
+  /* Mini card arriba */
+  .info{
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+  .cover{
+    width:92px; height:92px;
+    border-radius:8px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.06));
+    background-size:cover;
+    background-position:center;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    flex-shrink:0;
+  }
+  .meta{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .titulo{ font-weight:700; font-size:16px; color:var(--dorado); }
+  .sub{ font-size:13px; color:var(--gris); opacity:0.95; }
+
+  /* Controles grandes */
+  .controles{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+  }
+
+  .left-controls{
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+
+  .btn{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.05);
+    padding:10px;
+    border-radius:12px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    user-select:none;
+  }
+  .btn:hover{ transform:translateY(-2px); transition:transform .15s }
+
+  .play-btn{
+    width:62px; height:62px; border-radius:14px;
+    background: linear-gradient(180deg, var(--dorado), var(--dorado-oscuro));
+    color:#111; font-weight:800; font-size:20px;
+    box-shadow: 0 10px 30px rgba(212,175,55,0.25);
+  }
+
+  /* Progress bar */
+  .progress-wrap{
+    flex:1;
+    margin:0 8px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .time{ width:60px; text-align:center; font-size:13px; color:var(--gris) }
+  .progress{
+    position:relative;
+    height:12px;
+    background: rgba(255,255,255,0.06);
+    border-radius:999px;
+    flex:1;
+    cursor:pointer;
+    overflow:hidden;
+  }
+  .progress .filled{
+    position:absolute; left:0; top:0; bottom:0; width:0%;
+    background: linear-gradient(90deg, rgba(255,215,0,0.95), rgba(212,175,55,0.95));
+    box-shadow: 0 6px 18px rgba(212,175,55,0.12);
+    border-radius:999px;
+    transition: width 0.12s linear;
+  }
+  .progress .thumb{
+    position:absolute; right:0; top:50%; transform:translate(50%,-50%);
+    width:14px; height:14px; border-radius:50%;
+    background:#fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);
+    transform-origin:center;
+  }
+
+  /* Sliders */
+  .row{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+  }
+  input[type="range"]{
+    -webkit-appearance:none; width:100px; height:6px; border-radius:6px;
+    background:rgba(255,255,255,0.06);
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#fff;
+  }
+
+  /* Buttons secundarios */
+  .small{
+    padding:8px 10px; font-size:13px;
+    background:transparent; border-radius:10px;
+  }
+
+  /* Responsive: apila */
+  @media (max-width:980px){
+    .card{ grid-template-columns: 1fr; gap:14px; padding:18px; }
+    .panel-ctrl{ order:2 }
+    .panel-letras{ order:1 }
+    .cover{ display:none }
+  }
+</style>
+</head>
+
+<body>
+  <div id="karaoke">
+    <div id="overlay"></div>
+
+    <div class="card" role="region" aria-label="Reproductor karaoke">
+      <!-- PANEL LETRAS -->
+      <div class="panel-letras">
+        <div id="lineaAnterior" class="linea anterior"></div>
+        <div id="lineaActual" class="linea actual">Cargando letras…</div>
+        <div id="lineaSiguiente" class="linea siguiente"></div>
+      </div>
+
+      <!-- PANEL CONTROLES -->
+      <div class="panel-ctrl">
+        <div class="info">
+          <div id="cover" class="cover" style="background-image:url('fondo_MJ_show.jpg')"></div>
+          <div class="meta">
+            <div class="titulo">The Way You Make Me Feel</div>
+            <div class="sub">Michael Jackson — Karaoke</div>
+          </div>
+        </div>
+
+        <div class="controles">
+          <div class="left-controls">
+            <button id="playBtn" class="btn play-btn" title="Play/Pausa">►</button>
+
+            <div class="progress-wrap" aria-hidden="false">
+              <div id="timeCurrent" class="time">0:00</div>
+              <div id="progress" class="progress" role="progressbar" aria-label="Barra de progreso">
+                <div class="filled"></div>
+                <div class="thumb" style="display:none"></div>
+              </div>
+              <div id="timeTotal" class="time">0:00</div>
+            </div>
+          </div>
+
+          <div class="right-controls" style="display:flex; gap:10px; align-items:center;">
+            <div class="btn small" id="speedBtn" title="Velocidad (1x)">1x</div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input id="vol" type="range" min="0" max="1" step="0.01" value="1" />
+            </div>
+            <button id="muteBtn" class="btn small" title="Silenciar">🔊</button>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:6px;">
+          <div style="font-size:13px; color:var(--gris)">Controles: Barra espacio para Play/Pausa · Haz clic en la barra para buscar</div>
+          <div>
+            <a href="#" id="downloadLrc" class="btn small" style="text-decoration:none; color:inherit">Descargar LRC</a>
+            <a href="#" id="downloadMp3" class="btn small" style="text-decoration:none; color:inherit">Descargar MP3</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reproductor de audio oculto (usamos tag para compatibilidad) -->
+    <audio id="audio" src="TheWayYouMakeMeFeel.mp3" preload="auto"></audio>
+  </div>
+
+<script>
+  // Utils
+  const fmt = s => {
+    if (!isFinite(s) || s === null) return "0:00";
+    const m = Math.floor(s/60);
+    const sec = Math.floor(s%60).toString().padStart(2,'0');
+    return `${m}:${sec}`;
+  };
+
+  // Elementos
+  const audio = document.getElementById('audio');
+  const playBtn = document.getElementById('playBtn');
+  const progress = document.getElementById('progress');
+  const filled = progress.querySelector('.filled');
+  const thumb = progress.querySelector('.thumb');
+  const timeCurrent = document.getElementById('timeCurrent');
+  const timeTotal = document.getElementById('timeTotal');
+  const vol = document.getElementById('vol');
+  const muteBtn = document.getElementById('muteBtn');
+  const speedBtn = document.getElementById('speedBtn');
+  const lineaAnterior = document.getElementById('lineaAnterior');
+  const lineaActual = document.getElementById('lineaActual');
+  const lineaSiguiente = document.getElementById('lineaSiguiente');
+  const downloadLrc = document.getElementById('downloadLrc');
+  const downloadMp3 = document.getElementById('downloadMp3');
+
+  let letras = [];
+  let indice = 0;
+  let isSeeking = false;
+  let speed = 1;
+
+  // Cargar LRC
+  async function cargarLRC(){
+    try{
+      const resp = await fetch('TheWayYouMakeMeFeel.lrc');
+      const txt = await resp.text();
+      const lines = txt.split(/\r?\n/);
+      const patron = /^\[(\d+):(\d+)[.:](\d+)\](.*)$/;
+      const arr = [];
+      for (const ln of lines){
+        const m = ln.match(patron);
+        if (m){
+          const min = parseInt(m[1],10);
+          const seg = parseInt(m[2],10);
+          const mil = parseInt(m[3],10);
+          const t = min*60 + seg + (mil/100);
+          const text = m[4].trim();
+          arr.push({tiempo: t, texto: text});
+        }
+      }
+      arr.sort((a,b)=>a.tiempo-b.tiempo);
+      return arr;
+    }catch(e){
+      console.error('No se pudo cargar LRC', e);
+      return [];
+    }
+  }
+
+  // Inicialización
+  (async function init(){
+    letras = await cargarLRC();
+    if (letras.length === 0){
+      lineaActual.textContent = "No hay letras sincronizadas.";
+    } else {
+      lineaActual.textContent = letras[0].texto;
+      lineaAnterior.textContent = "";
+      lineaSiguiente.textContent = letras[1]?.texto || "";
+    }
+
+    // Descarga directa (enlace) si el navegador lo permite
+    downloadLrc.href = 'TheWayYouMakeMeFeel.lrc';
+    downloadLrc.download = 'TheWayYouMakeMeFeel.lrc';
+    downloadMp3.href = 'TheWayYouMakeMeFeel.mp3';
+    downloadMp3.download = 'TheWayYouMakeMeFeel.mp3';
+  })();
+
+  // Play/Pausa
+  function togglePlay(){
+    if (audio.paused) audio.play();
+    else audio.pause();
+  }
+  playBtn.addEventListener('click', togglePlay);
+  audio.addEventListener('play', ()=> playBtn.textContent = '❚❚');
+  audio.addEventListener('pause', ()=> playBtn.textContent = '►');
+
+  // Metadata: duración
+  audio.addEventListener('loadedmetadata', ()=>{
+    timeTotal.textContent = fmt(audio.duration);
+  });
+
+  // Time update -> progreso y letras
+  audio.addEventListener('timeupdate', ()=>{
+    if (!isSeeking){
+      const pct = (audio.currentTime / (audio.duration || 1)) * 100;
+      filled.style.width = pct + '%';
+    }
+    timeCurrent.textContent = fmt(audio.currentTime);
+    sincronizarLetras(audio.currentTime);
+  });
+
+  // Seek por click
+  function seekFromEvent(e){
+    const rect = progress.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const pct = Math.max(0, Math.min(1, x / rect.width));
+    const t = (audio.duration || 0) * pct;
+    audio.currentTime = t;
+    filled.style.width = (pct*100)+'%';
+  }
+
+  progress.addEventListener('click', (e)=> seekFromEvent(e));
+  // drag (pointer)
+  progress.addEventListener('pointerdown', (e)=>{
+    isSeeking = true;
+    progress.setPointerCapture(e.pointerId);
+    seekFromEvent(e);
+  });
+  progress.addEventListener('pointermove', (e)=> { if(isSeeking) seekFromEvent(e); });
+  progress.addEventListener('pointerup', (e)=> { isSeeking = false; try{ progress.releasePointerCapture(e.pointerId);}catch{} });
+
+  // Volumen
+  vol.addEventListener('input', ()=> {
+    audio.volume = parseFloat(vol.value);
+    muteBtn.textContent = audio.volume > 0 ? '🔊' : '🔈';
+  });
+
+  muteBtn.addEventListener('click', ()=>{
+    if (audio.muted || audio.volume === 0){
+      audio.muted = false;
+      audio.volume = Math.max(0.2, audio.volume || 1);
+      vol.value = audio.volume;
+      muteBtn.textContent = '🔊';
+    } else {
+      audio.muted = true;
+      muteBtn.textContent = '🔈';
+      vol.value = 0;
+    }
+  });
+
+  // Velocidad
+  speedBtn.addEventListener('click', ()=>{
+    const opciones = [1, 1.25, 1.5, 1.75, 2];
+    const idx = opciones.indexOf(speed);
+    speed = opciones[(idx+1) % opciones.length];
+    audio.playbackRate = speed;
+    speedBtn.textContent = speed + 'x';
+    speedBtn.title = 'Velocidad ' + speed + 'x';
+  });
+
+  // Sincronizar letras simple
+  function sincronizarLetras(timenow){
+    if (!letras.length) return;
+    // si timenow es antes del primer tiempo, reset
+    if (timenow < letras[0].tiempo){
+      indice = 0;
+      lineaAnterior.textContent = "";
+      lineaActual.textContent = letras[0].texto;
+      lineaSiguiente.textContent = letras[1]?.texto || "";
+      return;
+    }
+
+    // encontrar índice actual: el último con tiempo <= timenow
+    while (indice < letras.length - 1 && timenow >= letras[indice+1].tiempo){
+      indice++;
+    }
+    while (indice > 0 && timenow < letras[indice].tiempo){
+      indice--;
+    }
+
+    lineaActual.textContent = letras[indice]?.texto || "";
+    lineaAnterior.textContent = letras[indice-1]?.texto || "";
+    lineaSiguiente.textContent = letras[indice+1]?.texto || "";
+  }
+
+  // Shortcut: espacio para play/pause
+  window.addEventListener('keydown', (e)=>{
+    if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT'){
+      e.preventDefault();
+      togglePlay();
+    }
+  });
+
+  // Manejo de errores de reproducción (autoplay bloqueado)
+  audio.addEventListener('error', (ev)=>{
+    console.warn('Error en audio', ev);
+  });
+
+  // Mejora: si el usuario hace click en la tarjeta de la línea actual -> saltar 2s adelante
+  lineaActual.addEventListener('click', ()=> {
+    audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 2);
+  });
+
+  // Intenta habilitar reproducción automática si el navegador lo permite (sin sonido)
+  document.addEventListener('click', function once(){
+    if (audio.paused) {
+      audio.play().catch(()=>{/* autoplay bloqueado, al usuario hacer click en play se reproduce */});
+    }
+    document.removeEventListener('click', once);
+  });
+</script>
+</body>
+</html>
+
